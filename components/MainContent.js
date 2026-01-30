@@ -26,15 +26,28 @@ export default function MainContent({ apiKey }) {
       return;
     }
 
-    if (!apiKey) {
+    // Check if API key exists and is valid (basic validation)
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
       setError('Please enter your Gemini API key');
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const genAI = new GoogleGenAI(apiKey);
+      // Basic validation of API key format (Google API keys typically start with "AI" followed by letters/numbers)
+      const trimmedApiKey = apiKey.trim();
+
+      // More comprehensive validation of API key format
+      if (!trimmedApiKey.startsWith('AI') || trimmedApiKey.length < 30) {
+        setError('Invalid API key format. Please check your Google API key.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Ensure the API key is properly formatted for the GoogleGenAI constructor
+      const genAI = new GoogleGenAI(trimmedApiKey);
       const model = genAI.getGenerativeModel({
         model: "gemini-3-flash-preview",
       });
@@ -89,7 +102,12 @@ export default function MainContent({ apiKey }) {
       }
     } catch (error) {
       console.error("Error calling Gemini API:", error);
-      setError(`Error: ${error.message}`);
+      // Handle the specific error from the Google GenAI library
+      if (error.message && error.message.includes("An API Key must be set when running in a browser")) {
+        setError('Error: An API Key must be set when running in a browser. Please make sure your API key is valid and saved.');
+      } else {
+        setError(`Error: ${error.message || error}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -138,11 +156,19 @@ export default function MainContent({ apiKey }) {
             />
           </div>
 
+          {!apiKey && (
+            <p className="text-yellow-500 text-sm mb-4">⚠️ Please enter and save your API key in the sidebar first.</p>
+          )}
+
+          {apiKey && apiKey.trim().length > 0 && !apiKey.trim().startsWith('AI') && (
+            <p className="text-yellow-500 text-sm mb-4">⚠️ Invalid API key format. Google API keys should start with "AI".</p>
+          )}
+
           <button
             type="submit"
-            disabled={isLoading || !apiKey}
+            disabled={isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')}
             className={`py-3 px-6 rounded-lg font-medium ${
-              isLoading || !apiKey
+              isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')
                 ? 'bg-gray-700 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}

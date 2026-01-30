@@ -9,14 +9,16 @@ export default function Sidebar({ apiKey, setApiKey }) {
     // Load API key from localStorage on component mount
     const savedApiKey = localStorage.getItem('gemini_api_key');
     if (savedApiKey) {
+      // Update both the parent state and local temporary state
       setApiKey(savedApiKey);
       setTempApiKey(savedApiKey);
     }
   }, [setApiKey]);
 
   const handleSaveApiKey = () => {
+    // Update the parent component's state
     setApiKey(tempApiKey);
-    // Save API key to localStorage
+    // Also save to localStorage for persistence
     localStorage.setItem('gemini_api_key', tempApiKey);
   };
 

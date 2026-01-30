@@ -15,6 +15,11 @@ export default function Home() {
     }
   }, []);
 
+  // Function to update API key from child component
+  const updateApiKey = (newApiKey) => {
+    setApiKey(newApiKey);
+  };
+
   return (
     <div className="flex w-full min-h-screen">
       <Sidebar apiKey={apiKey} setApiKey={setApiKey} />
