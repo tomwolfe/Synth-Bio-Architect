@@ -123,7 +123,7 @@ export default function MainContent({ apiKey }) {
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold">AI Bio-Research Co-Pilot</h1>
+          <h1 className="text-3xl font-bold">Synth Bio Architect</h1>
           <p className="text-gray-400 mt-2">Generate hypotheses, design experiments, and draft proposals with AI assistance</p>
         </header>
 

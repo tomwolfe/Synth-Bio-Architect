@@ -19,7 +19,7 @@ export default function Sidebar({ apiKey, setApiKey }) {
 
   return (
     <div className="w-64 bg-gray-800 p-4 flex flex-col h-screen border-r border-gray-700">
-      <h2 className="text-xl font-bold mb-6 text-center">Bio-Research Co-Pilot</h2>
+      <h2 className="text-xl font-bold mb-6 text-center">Synth Bio Architect</h2>
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2">Gemini API Key</label>
         <input
