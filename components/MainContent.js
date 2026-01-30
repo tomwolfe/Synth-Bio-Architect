@@ -46,10 +46,11 @@ export default function MainContent({ apiKey }) {
         return;
       }
 
-      // Ensure the API key is properly formatted for the GoogleGenAI constructor
+      console.log("Initializing Gemini with key length:", trimmedApiKey.length); // Debug check
+
       const genAI = new GoogleGenAI(trimmedApiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3-flash-preview", // Using the requested model name
       });
 
       // System instruction
