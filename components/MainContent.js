@@ -48,7 +48,7 @@ export default function MainContent({ apiKey }) {
 
       console.log("Initializing Gemini with key length:", trimmedApiKey.length); // Debug check
 
-      const genAI = new GoogleGenAI(trimmedApiKey);
+      const genAI = new GoogleGenAI({ apiKey: trimmedApiKey });
       const model = genAI.getGenerativeModel({
         model: "gemini-3-flash-preview", // Using the requested model name
       });
@@ -57,7 +57,7 @@ export default function MainContent({ apiKey }) {
       const systemInstruction = "You are a world-class computational biologist. Generate 3 distinct, grounded hypotheses. For the best one, design a detailed CRISPR/peptide experiment including a Bill of Materials and a grant proposal draft.";
 
       // Construct the prompt
-      const fullPrompt = `${systemInstruction}\n\nResearch Challenge: ${prompt}\n\nProvide your response in three sections:\n\n1. PHASE 1: HYPOTHESES - Generate 3 novel research directions with citations from Google Search.\n2. PHASE 2: EXPERIMENTAL DESIGN - Detail the protocol and list required reagents.\n3. PHASE 3: GRANT PROPOSAL - Create an NIH-style proposal with a Predicted Impact Score (0-100).`;
+      const fullPrompt = `${systemInstruction}\n\nResearch Challenge: ${prompt}\n\nProvide your response in three sections:\n\n1. PHASE 1: HYPOTHESES - Generate 3 novel research directions.\n2. PHASE 2: EXPERIMENTAL DESIGN - Detail the protocol and list required reagents.\n3. PHASE 3: GRANT PROPOSAL - Create an NIH-style proposal with a Predicted Impact Score (0-100).`;
 
       // Prepare the content for the model
       const contents = [{
@@ -73,22 +73,13 @@ export default function MainContent({ apiKey }) {
       });
 
       // Use streaming to get real-time responses
-      const result = await model.generateContentStream({
-        contents,
+      const result = await model.generateContentStream(contents, {
         generationConfig: {
           temperature: 0.7,
           topP: 0.8,
           topK: 40,
           maxOutputTokens: 2048,
         },
-        tools: [{
-          googleSearchRetrieval: {
-            dynamicRetrievalConfig: {
-              mode: 'MODE_DYNAMIC',
-              dynamicRetrievalThreshold: 0.7
-            }
-          }
-        }]
       });
 
       // Process the streamed response
