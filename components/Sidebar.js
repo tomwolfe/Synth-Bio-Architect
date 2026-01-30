@@ -1,12 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Sidebar({ apiKey, setApiKey }) {
   const [tempApiKey, setTempApiKey] = useState(apiKey);
 
+  useEffect(() => {
+    // Load API key from localStorage on component mount
+    const savedApiKey = localStorage.getItem('gemini_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+      setTempApiKey(savedApiKey);
+    }
+  }, [setApiKey]);
+
   const handleSaveApiKey = () => {
     setApiKey(tempApiKey);
+    // Save API key to localStorage
+    localStorage.setItem('gemini_api_key', tempApiKey);
   };
 
   return (

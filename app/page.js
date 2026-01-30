@@ -1,11 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import MainContent from '../components/MainContent';
 
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
+
+  useEffect(() => {
+    // Initialize API key from localStorage on component mount
+    const savedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+  }, []);
 
   return (
     <div className="flex w-full min-h-screen">

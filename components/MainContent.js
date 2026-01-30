@@ -12,11 +12,22 @@ export default function MainContent({ apiKey }) {
     experimentalDesign: '',
     grantProposal: ''
   });
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Clear previous errors
+    setError('');
+
+    // Validate prompt length
+    if (prompt.trim().length < 20) {
+      setError('Research prompt must be at least 20 characters long.');
+      return;
+    }
+
     if (!apiKey) {
-      alert('Please enter your Gemini API key');
+      setError('Please enter your Gemini API key');
       return;
     }
 
@@ -78,7 +89,7 @@ export default function MainContent({ apiKey }) {
       }
     } catch (error) {
       console.error("Error calling Gemini API:", error);
-      alert(`Error: ${error.message}`);
+      setError(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -86,14 +97,15 @@ export default function MainContent({ apiKey }) {
 
   // Helper function to parse the response into sections
   const parseResponseIntoSections = (text) => {
-    const hypothesesMatch = text.match(/PHASE 1: HYPOTHESES([\s\S]*?)(?=PHASE 2:|PHASE 3:|$)/i);
-    const experimentalDesignMatch = text.match(/PHASE 2: EXPERIMENTAL DESIGN([\s\S]*?)(?=PHASE 3:|PHASE 1:|$)/i);
-    const grantProposalMatch = text.match(/PHASE 3: GRANT PROPOSAL([\s\S]*)/i);
+    // Case-insensitive regex with flexible whitespace handling
+    const hypothesesMatch = text.match(/PHASE\s*1\s*[:\-]?\s*(?:HYPOTHESES|HYPOTHESIS)([\s\S]*?)(?=PHASE\s*\d\s*[:\-]?\s*(?:EXPERIMENTAL DESIGN|GRANT PROPOSAL)|$)/i);
+    const experimentalDesignMatch = text.match(/PHASE\s*2\s*[:\-]?\s*(?:EXPERIMENTAL DESIGN|EXPERIMENT)([\s\S]*?)(?=PHASE\s*\d\s*[:\-]?\s*(?:HYPOTHESES?|GRANT PROPOSAL)|$)/i);
+    const grantProposalMatch = text.match(/PHASE\s*3\s*[:\-]?\s*(?:GRANT PROPOSAL|PROPOSAL)([\s\S]*)/i);
 
     return {
-      hypotheses: hypothesesMatch ? hypothesesMatch[1].trim() : 'Could not extract hypotheses.',
-      experimentalDesign: experimentalDesignMatch ? experimentalDesignMatch[1].trim() : 'Could not extract experimental design.',
-      grantProposal: grantProposalMatch ? grantProposalMatch[1].trim() : 'Could not extract grant proposal.'
+      hypotheses: hypothesesMatch ? hypothesesMatch[1].trim() : 'Section pending...',
+      experimentalDesign: experimentalDesignMatch ? experimentalDesignMatch[1].trim() : 'Section pending...',
+      grantProposal: grantProposalMatch ? grantProposalMatch[1].trim() : 'Section pending...'
     };
   };
 
@@ -104,6 +116,13 @@ export default function MainContent({ apiKey }) {
           <h1 className="text-3xl font-bold">AI Bio-Research Co-Pilot</h1>
           <p className="text-gray-400 mt-2">Generate hypotheses, design experiments, and draft proposals with AI assistance</p>
         </header>
+
+        {/* Error message display */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-900/30 border border-red-700 rounded-lg">
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
