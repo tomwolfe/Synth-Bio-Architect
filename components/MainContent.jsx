@@ -4,6 +4,25 @@ import { useState } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import OutputSection from './OutputSection';
 
+// Helper function to parse the response into sections
+export const parseResponseIntoSections = (text) => {
+  // Case-insensitive regex with flexible whitespace handling
+  // Supports Phase 1, Phase I, Phase One, PHASE 1, etc.
+  const phase1Regex = /(?:\d+\.\s*)?PHASE\s*(?:1|I|ONE)\s*[:\-]?\s*(?:HYPOTHESES|HYPOTHESIS)/i;
+  const phase2Regex = /(?:\d+\.\s*)?PHASE\s*(?:2|II|TWO)\s*[:\-]?\s*(?:EXPERIMENTAL DESIGN|EXPERIMENT)/i;
+  const phase3Regex = /(?:\d+\.\s*)?PHASE\s*(?:3|III|THREE)\s*[:\-]?\s*(?:GRANT PROPOSAL|PROPOSAL)/i;
+
+  const hypothesesMatch = text.match(new RegExp(`${phase1Regex.source}([\\s\\S]*?)(?=${phase2Regex.source}|${phase3Regex.source}|$)`, 'i'));
+  const experimentalDesignMatch = text.match(new RegExp(`${phase2Regex.source}([\\s\\S]*?)(?=${phase1Regex.source}|${phase3Regex.source}|$)`, 'i'));
+  const grantProposalMatch = text.match(new RegExp(`${phase3Regex.source}([\\s\\S]*)`, 'i'));
+
+  return {
+    hypotheses: hypothesesMatch ? hypothesesMatch[1].trim() : 'Section pending...',
+    experimentalDesign: experimentalDesignMatch ? experimentalDesignMatch[1].trim() : 'Section pending...',
+    grantProposal: grantProposalMatch ? grantProposalMatch[1].trim() : 'Section pending...'
+  };
+};
+
 export default function MainContent({ apiKey }) {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -46,8 +65,6 @@ export default function MainContent({ apiKey }) {
         return;
       }
 
-      console.log("Initializing Gemini with key length:", trimmedApiKey.length); // Debug check
-
       const client = new GoogleGenAI({ apiKey: trimmedApiKey });
 
       // System instruction
@@ -73,7 +90,7 @@ export default function MainContent({ apiKey }) {
       const result = await client.models.generateContentStream({
         model: "gemini-3-flash-preview", // Using the requested model name
         contents: contents,
-        config: { // Note: 'config', not 'generationConfig'
+        config: {
           temperature: 0.7,
           topP: 0.8,
           topK: 40,
@@ -94,7 +111,6 @@ export default function MainContent({ apiKey }) {
       }
     } catch (error) {
       console.error("Error calling Gemini API:", error);
-      // Handle the specific error from the Google GenAI library
       if (error.message && error.message.includes("An API Key must be set when running in a browser")) {
         setError('Error: An API Key must be set when running in a browser. Please make sure your API key is valid and saved.');
       } else {
@@ -103,20 +119,6 @@ export default function MainContent({ apiKey }) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper function to parse the response into sections
-  const parseResponseIntoSections = (text) => {
-    // Case-insensitive regex with flexible whitespace handling
-    const hypothesesMatch = text.match(/PHASE\s*1\s*[:\-]?\s*(?:HYPOTHESES|HYPOTHESIS)([\s\S]*?)(?=PHASE\s*\d\s*[:\-]?\s*(?:EXPERIMENTAL DESIGN|GRANT PROPOSAL)|$)/i);
-    const experimentalDesignMatch = text.match(/PHASE\s*2\s*[:\-]?\s*(?:EXPERIMENTAL DESIGN|EXPERIMENT)([\s\S]*?)(?=PHASE\s*\d\s*[:\-]?\s*(?:HYPOTHESES?|GRANT PROPOSAL)|$)/i);
-    const grantProposalMatch = text.match(/PHASE\s*3\s*[:\-]?\s*(?:GRANT PROPOSAL|PROPOSAL)([\s\S]*)/i);
-
-    return {
-      hypotheses: hypothesesMatch ? hypothesesMatch[1].trim() : 'Section pending...',
-      experimentalDesign: experimentalDesignMatch ? experimentalDesignMatch[1].trim() : 'Section pending...',
-      grantProposal: grantProposalMatch ? grantProposalMatch[1].trim() : 'Section pending...'
-    };
   };
 
   return (
@@ -159,8 +161,7 @@ export default function MainContent({ apiKey }) {
           <button
             type="submit"
             disabled={isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')}
-            className={`py-3 px-6 rounded-lg font-medium ${
-              isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')
+            className={`py-3 px-6 rounded-lg font-medium ${ isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')
                 ? 'bg-gray-700 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}

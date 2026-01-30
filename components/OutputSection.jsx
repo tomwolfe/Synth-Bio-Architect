@@ -1,12 +1,35 @@
 'use client';
 
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function OutputSection({ title, content, isLoading }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (content) {
+      navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const isContentValid = content && content !== 'Section pending...' && content !== 'Submit a research prompt to generate content';
+
   return (
     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-      <h2 className="text-xl font-semibold mb-4 text-blue-400">{title}</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-blue-400">{title}</h2>
+        {!isLoading && isContentValid && (
+          <button
+            onClick={handleCopy}
+            className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        )}
+      </div>
       <div className="prose prose-invert max-w-none">
         {isLoading ? (
           <div className="animate-pulse space-y-4">
