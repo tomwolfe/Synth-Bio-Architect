@@ -73,7 +73,7 @@ export default function MainContent({ apiKey }) {
       const result = await client.models.generateContentStream({
         model: "gemini-3-flash-preview", // Using the requested model name
         contents: contents,
-        generationConfig: {
+        config: { // Note: 'config', not 'generationConfig'
           temperature: 0.7,
           topP: 0.8,
           topK: 40,
@@ -84,7 +84,8 @@ export default function MainContent({ apiKey }) {
       // Process the streamed response
       let fullText = '';
       for await (const chunk of result) {
-        const chunkText = chunk.text();
+        // Access text via the candidates array
+        const chunkText = chunk.candidates[0].content.parts[0].text || '';
         fullText += chunkText;
 
         // Parse the current text into sections and update the UI in real-time
