@@ -48,10 +48,7 @@ export default function MainContent({ apiKey }) {
 
       console.log("Initializing Gemini with key length:", trimmedApiKey.length); // Debug check
 
-      const genAI = new GoogleGenAI({ apiKey: trimmedApiKey });
-      const model = genAI.getGenerativeModel({
-        model: "gemini-3-flash-preview", // Using the requested model name
-      });
+      const client = new GoogleGenAI({ apiKey: trimmedApiKey });
 
       // System instruction
       const systemInstruction = "You are a world-class computational biologist. Generate 3 distinct, grounded hypotheses. For the best one, design a detailed CRISPR/peptide experiment including a Bill of Materials and a grant proposal draft.";
@@ -72,8 +69,10 @@ export default function MainContent({ apiKey }) {
         grantProposal: ''
       });
 
-      // Use streaming to get real-time responses
-      const result = await model.generateContentStream(contents, {
+      // Use streaming to get real-time responses with the new SDK
+      const result = await client.models.generateContentStream({
+        model: "gemini-3-flash-preview", // Using the requested model name
+        contents: contents,
         generationConfig: {
           temperature: 0.7,
           topP: 0.8,
