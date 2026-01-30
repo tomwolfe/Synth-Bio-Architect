@@ -1,0 +1,122 @@
+# Dependencies
+node_modules/
+
+# Production build
+.next/
+
+# Environment variables
+.env*.local
+.env.local
+.env.production.local
+.env.development.local
+
+# IDE files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Temporary folders
+tmp/
+temp/
+
+# next-auth session files
+.next-auth.session-token
+
+# Build outputs
+dist/
+build/
+
+# Next.js specific ignores
+.nft.json
+.vercel/
+
+# Local configuration files
+*.local
+
+# Debug files
+debug/
+*.swp
+*.swo
+
+# Package manager cache
+.yarn/
+.pnp.*
+.pnp.js
+
+# Testing
+junit.xml
+coverage.xml
+
+# Sensitive files
+secrets/
+config/secrets.json
+
+# Compiled JavaScript
+*.min.js
+*.bundle.js
+
+# Lock files for other package managers
+Gemfile.lock
+composer.lock
+
+# Output of 'npm pack'
+*.tgz
+
+# Next.js cache
+.cache/
+
+# Local VSCode settings
+.vscode/settings.json
+
+# PlatformIO build files
+.piolibdeps/
+.platformio/
+
+# Local environment files
+.env.backup
+.env.dev
+.env.prod
+.env.staging
+.env.test
+
+# Browser extensions
+*.crx
+
+# Docker
+.docker/
+
+# Local database files
+*.db
+*.db-journal
+
+# Local backup files
+*.bak
+*.backup
+*~
+
+# Local temporary files
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Icon?
+Network Trash Folder
+Temporary Items
+VolumeIcon.icns

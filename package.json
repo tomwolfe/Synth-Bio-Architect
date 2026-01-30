@@ -1,0 +1,38 @@
+{
+  "name": "ai-bio-research-copilot",
+  "version": "1.0.0",
+  "description": "An AI-powered tool for bio-research hypothesis generation and experimental design",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [
+    "ai",
+    "biotech",
+    "research",
+    "crispr",
+    "gemini",
+    "bioinformatics",
+    "computational biology"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^1.38.0",
+    "@tailwindcss/postcss": "^4.1.18",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18"
+  }
+}
