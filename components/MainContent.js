@@ -83,7 +83,7 @@ export default function MainContent({ apiKey }) {
 
       // Process the streamed response
       let fullText = '';
-      for await (const chunk of result.stream) {
+      for await (const chunk of result) {
         const chunkText = chunk.text();
         fullText += chunkText;
 
