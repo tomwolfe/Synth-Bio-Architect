@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseResponseIntoSections } from '../components/MainContent.jsx';
+import { parseResponseIntoSections } from '../app/lib/parser';
 
 describe('parseResponseIntoSections', () => {
   it('should parse perfectly formatted response', () => {

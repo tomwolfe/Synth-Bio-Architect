@@ -1,31 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import OutputSection from './OutputSection';
-
-// Helper function to parse the response into sections
-export const parseResponseIntoSections = (text) => {
-  // Case-insensitive regex with flexible whitespace handling
-  // Supports Phase 1, Phase I, Phase One, PHASE 1, etc.
-  const phase1Regex = /(?:\d+\.\s*)?PHASE\s*(?:1|I|ONE)\s*[:\-]?\s*(?:HYPOTHESES|HYPOTHESIS)/i;
-  const phase2Regex = /(?:\d+\.\s*)?PHASE\s*(?:2|II|TWO)\s*[:\-]?\s*(?:EXPERIMENTAL DESIGN|EXPERIMENT)/i;
-  const phase3Regex = /(?:\d+\.\s*)?PHASE\s*(?:3|III|THREE)\s*[:\-]?\s*(?:GRANT PROPOSAL|PROPOSAL)/i;
-
-  const hypothesesMatch = text.match(new RegExp(`${phase1Regex.source}([\\s\\S]*?)(?=${phase2Regex.source}|${phase3Regex.source}|$)`, 'i'));
-  const experimentalDesignMatch = text.match(new RegExp(`${phase2Regex.source}([\\s\\S]*?)(?=${phase1Regex.source}|${phase3Regex.source}|$)`, 'i'));
-  const grantProposalMatch = text.match(new RegExp(`${phase3Regex.source}([\\s\\S]*)`, 'i'));
-
-  return {
-    hypotheses: hypothesesMatch ? hypothesesMatch[1].trim() : 'Section pending...',
-    experimentalDesign: experimentalDesignMatch ? experimentalDesignMatch[1].trim() : 'Section pending...',
-    grantProposal: grantProposalMatch ? grantProposalMatch[1].trim() : 'Section pending...'
-  };
-};
+import { parseResponseIntoSections } from '../app/lib/parser';
+import { generateResearchStream } from '../app/lib/gemini';
 
 export default function MainContent({ apiKey }) {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [output, setOutput] = useState({
     hypotheses: '',
     experimentalDesign: '',
@@ -53,31 +36,17 @@ export default function MainContent({ apiKey }) {
     }
 
     setIsLoading(true);
+    setIsGenerating(false);
 
     try {
-      // Basic validation of API key format (Google API keys typically start with "AI" followed by letters/numbers)
       const trimmedApiKey = apiKey.trim();
 
-      // More comprehensive validation of API key format
+      // Basic validation of API key format
       if (!trimmedApiKey.startsWith('AI') || trimmedApiKey.length < 30) {
         setError('Invalid API key format. Please check your Google API key.');
         setIsLoading(false);
         return;
       }
-
-      const client = new GoogleGenAI({ apiKey: trimmedApiKey });
-
-      // System instruction
-      const systemInstruction = "You are a world-class computational biologist. Generate 3 distinct, grounded hypotheses. For the best one, design a detailed CRISPR/peptide experiment including a Bill of Materials and a grant proposal draft.";
-
-      // Construct the prompt
-      const fullPrompt = `${systemInstruction}\n\nResearch Challenge: ${prompt}\n\nProvide your response in three sections:\n\n1. PHASE 1: HYPOTHESES - Generate 3 novel research directions.\n2. PHASE 2: EXPERIMENTAL DESIGN - Detail the protocol and list required reagents.\n3. PHASE 3: GRANT PROPOSAL - Create an NIH-style proposal with a Predicted Impact Score (0-100).`;
-
-      // Prepare the content for the model
-      const contents = [{
-        role: 'user',
-        parts: [{ text: fullPrompt }]
-      }];
 
       // Initialize output sections as empty
       setOutput({
@@ -86,38 +55,40 @@ export default function MainContent({ apiKey }) {
         grantProposal: ''
       });
 
-      // Use streaming to get real-time responses with the new SDK
-      const result = await client.models.generateContentStream({
-        model: "gemini-3-flash-preview", // Using the requested model name
-        contents: contents,
-        config: {
-          temperature: 0.7,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 2048,
-        },
-      });
+      const result = await generateResearchStream(trimmedApiKey, prompt);
+      setIsGenerating(true);
 
       // Process the streamed response
       let fullText = '';
       for await (const chunk of result) {
         // Access text via the candidates array
         const chunkText = chunk.candidates[0].content.parts[0].text || '';
-        fullText += chunkText;
-
-        // Parse the current text into sections and update the UI in real-time
-        const sections = parseResponseIntoSections(fullText);
-        setOutput(sections);
+        
+        if (chunkText.trim()) {
+          fullText += chunkText;
+          // Parse the current text into sections and update the UI in real-time
+          const sections = parseResponseIntoSections(fullText);
+          setOutput(sections);
+        }
       }
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      if (error.message && error.message.includes("An API Key must be set when running in a browser")) {
+    } catch (err) {
+      console.error("Error calling Gemini API:", err);
+      const errorMessage = err.message || String(err);
+      
+      if (errorMessage.includes("403")) {
+        setError('Quota Exceeded: Your API key has reached its limit or doesn\'t have permission for this model.');
+      } else if (errorMessage.includes("401") || errorMessage.includes("400")) {
+        setError('Invalid API Key: Please check your Google API key in the sidebar.');
+      } else if (errorMessage.includes("safety")) {
+        setError('Safety Filter: The model refused to generate a response due to safety concerns.');
+      } else if (errorMessage.includes("An API Key must be set")) {
         setError('Error: An API Key must be set when running in a browser. Please make sure your API key is valid and saved.');
       } else {
-        setError(`Error: ${error.message || error}`);
+        setError(`Error: ${errorMessage}`);
       }
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -158,36 +129,46 @@ export default function MainContent({ apiKey }) {
             <p className="text-yellow-500 text-sm mb-4">⚠️ Invalid API key format. Google API keys should start with "AI".</p>
           )}
 
-          <button
-            type="submit"
-            disabled={isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')}
-            className={`py-3 px-6 rounded-lg font-medium ${ isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')
-                ? 'bg-gray-700 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isLoading ? 'Generating Response...' : 'Generate Research Plan'}
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="submit"
+              disabled={isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')}
+              className={`py-3 px-6 rounded-lg font-medium ${ isLoading || !apiKey || apiKey.trim().length === 0 || !apiKey.trim().startsWith('AI')
+                  ? 'bg-gray-700 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
+              {isLoading ? 'Generating Response...' : 'Generate Research Plan'}
+            </button>
+            
+            {isGenerating && (
+              <span className="text-blue-400 animate-pulse flex items-center">
+                <span className="mr-2 h-2 w-2 bg-blue-400 rounded-full"></span>
+                Generating...
+              </span>
+            )}
+          </div>
         </form>
 
         <div className="mt-10 space-y-10">
           <OutputSection
             title="Phase 1: Hypotheses"
             content={output.hypotheses}
-            isLoading={isLoading}
+            isLoading={isLoading && !isGenerating}
           />
           <OutputSection
             title="Phase 2: Experimental Design"
             content={output.experimentalDesign}
-            isLoading={isLoading}
+            isLoading={isLoading && !isGenerating}
           />
           <OutputSection
             title="Phase 3: Grant Proposal"
             content={output.grantProposal}
-            isLoading={isLoading}
+            isLoading={isLoading && !isGenerating}
           />
         </div>
       </div>
     </div>
   );
 }
+
