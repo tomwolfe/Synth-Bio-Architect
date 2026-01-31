@@ -1,5 +1,7 @@
 # Synth Bio Architect
 
+![screenshot](screenshots/Screenshot-1-30-2026.png)
+
 An AI-powered tool for synthetic biology architecture and design, leveraging Google's Gemini API to generate research hypotheses, experimental designs, and grant proposals.
 
 ## Overview
