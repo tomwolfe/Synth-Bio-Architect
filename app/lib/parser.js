@@ -1,3 +1,10 @@
+import {
+  ResearchResponseSchema,
+  HypothesisSchema,
+  ExperimentalDesignSchema,
+  GrantProposalSchema
+} from './schemas.js';
+
 // Helper function to parse the response into sections
 export const parseResponseIntoSections = (text) => {
   // Case-insensitive regex with flexible whitespace handling
@@ -15,4 +22,44 @@ export const parseResponseIntoSections = (text) => {
     experimentalDesign: experimentalDesignMatch ? experimentalDesignMatch[1].trim() : 'Section pending...',
     grantProposal: grantProposalMatch ? grantProposalMatch[1].trim() : 'Section pending...'
   };
+};
+
+export const validateHypothesesSection = (text) => {
+  if (text === 'Section pending...' || text === 'Submit a research prompt to generate content') {
+    throw new Error('Hypotheses section is pending. Please generate content first.');
+  }
+
+  return HypothesisSchema.safeParse(text);
+};
+
+export const validateExperimentalDesignSection = (text) => {
+  if (text === 'Section pending...' || text === 'Submit a research prompt to generate content') {
+    throw new Error('Experimental design section is pending. Please generate content first.');
+  }
+
+  return ExperimentalDesignSchema.safeParse(text);
+};
+
+export const validateGrantProposalSection = (text) => {
+  if (text === 'Section pending...' || text === 'Submit a research prompt to generate content') {
+    throw new Error('Grant proposal section is pending. Please generate content first.');
+  }
+
+  return GrantProposalSchema.safeParse(text);
+};
+
+export const validateResearchResponse = (sections) => {
+  try {
+    const validatedHypotheses = validateHypothesesSection(sections.hypotheses);
+    const validatedExperimentalDesign = validateExperimentalDesignSection(sections.experimentalDesign);
+    const validatedGrantProposal = validateGrantProposalSection(sections.grantProposal);
+
+    return {
+      hypotheses: validatedHypotheses,
+      experimentalDesign: validatedExperimentalDesign,
+      grantProposal: validatedGrantProposal
+    };
+  } catch (error) {
+    throw new Error(`Research response validation failed: ${error.message}`);
+  }
 };

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import OutputSection from './OutputSection';
+import RefineButton from './RefineButton';
 import { parseResponseIntoSections } from '../app/lib/parser';
 import { generateResearchStream } from '../app/lib/gemini';
 
@@ -15,6 +16,8 @@ export default function MainContent({ apiKey }) {
     grantProposal: ''
   });
   const [error, setError] = useState('');
+  const [refinePhase, setRefinePhase] = useState(null);
+  const [isRefining, setIsRefining] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,6 +40,7 @@ export default function MainContent({ apiKey }) {
 
     setIsLoading(true);
     setIsGenerating(false);
+    setRefinePhase(null);
 
     try {
       const trimmedApiKey = apiKey.trim();
@@ -88,6 +92,50 @@ export default function MainContent({ apiKey }) {
       }
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRefine = async (currentContent, refinementInstruction, phase) => {
+    setIsRefining(true);
+    setError('');
+    setRefinePhase(phase);
+
+    try {
+      const trimmedApiKey = apiKey.trim();
+
+      if (!trimmedApiKey.startsWith('AI') || trimmedApiKey.length < 30) {
+        throw new Error('Invalid API key format.');
+      }
+
+      const result = await generateResearchStream(trimmedApiKey, refinementInstruction, currentContent);
+      setIsGenerating(true);
+
+      let fullText = '';
+      for await (const chunk of result) {
+        const chunkText = chunk.candidates[0].content.parts[0].text || '';
+        
+        if (chunkText.trim()) {
+          fullText += chunkText;
+          const sections = parseResponseIntoSections(fullText);
+          setOutput(sections);
+        }
+      }
+    } catch (err) {
+      console.error("Error during refinement:", err);
+      const errorMessage = err.message || String(err);
+      
+      if (errorMessage.includes("403")) {
+        setError('Quota Exceeded during refinement.');
+      } else if (errorMessage.includes("401") || errorMessage.includes("400")) {
+        setError('Invalid API Key during refinement.');
+      } else if (errorMessage.includes("safety")) {
+        setError('Safety Filter during refinement.');
+      } else {
+        setError(`Refinement error: ${errorMessage}`);
+      }
+    } finally {
+      setIsRefining(false);
       setIsGenerating(false);
     }
   };
@@ -151,21 +199,53 @@ export default function MainContent({ apiKey }) {
         </form>
 
         <div className="mt-10 space-y-10">
-          <OutputSection
-            title="Phase 1: Hypotheses"
-            content={output.hypotheses}
-            isLoading={isLoading && !isGenerating}
-          />
-          <OutputSection
-            title="Phase 2: Experimental Design"
-            content={output.experimentalDesign}
-            isLoading={isLoading && !isGenerating}
-          />
-          <OutputSection
-            title="Phase 3: Grant Proposal"
-            content={output.grantProposal}
-            isLoading={isLoading && !isGenerating}
-          />
+          <div>
+            <OutputSection
+              title="Phase 1: Hypotheses"
+              content={output.hypotheses}
+              isLoading={isLoading && !isGenerating}
+            />
+            {output.hypotheses && output.hypotheses !== 'Section pending...' && output.hypotheses !== 'Submit a research prompt to generate content' && (
+              <RefineButton
+                content={output.hypotheses}
+                onRefine={handleRefine}
+                phase="Hypotheses"
+                isLoading={isRefining}
+              />
+            )}
+          </div>
+          <div>
+            <OutputSection
+              title="Phase 2: Experimental Design"
+              content={output.experimentalDesign}
+              isLoading={isLoading && !isGenerating}
+              isPhase2={true}
+            />
+            {output.experimentalDesign && output.experimentalDesign !== 'Section pending...' && output.experimentalDesign !== 'Submit a research prompt to generate content' && (
+              <RefineButton
+                content={output.experimentalDesign}
+                onRefine={handleRefine}
+                phase="Experimental Design"
+                isLoading={isRefining}
+              />
+            )}
+          </div>
+          <div>
+            <OutputSection
+              title="Phase 3: Grant Proposal"
+              content={output.grantProposal}
+              isLoading={isLoading && !isGenerating}
+              isPhase3={true}
+            />
+            {output.grantProposal && output.grantProposal !== 'Section pending...' && output.grantProposal !== 'Submit a research prompt to generate content' && (
+              <RefineButton
+                content={output.grantProposal}
+                onRefine={handleRefine}
+                phase="Grant Proposal"
+                isLoading={isRefining}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

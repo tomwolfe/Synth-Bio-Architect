@@ -6,17 +6,22 @@ import { GoogleGenAI } from '@google/genai';
  * 
  * @param {string} apiKey - The user's Google Gemini API key.
  * @param {string} prompt - The research prompt to send to the model.
+ * @param {string} context - Optional context from previous generation for refinement.
  * @returns {Promise<AsyncGenerator>} - A stream of content chunks.
  */
-export async function generateResearchStream(apiKey, prompt) {
+export async function generateResearchStream(apiKey, prompt, context = null) {
   const client = new GoogleGenAI({ apiKey });
 
   // System instruction
   const systemInstruction = "You are a world-class computational biologist. Generate 3 distinct, grounded hypotheses. For the best one, design a detailed CRISPR/peptide experiment including a Bill of Materials and a grant proposal draft.";
 
   // Construct the prompt
-  const fullPrompt = `${systemInstruction}\n\nResearch Challenge: ${prompt}\n\nProvide your response in three sections:\n\n1. PHASE 1: HYPOTHESES - Generate 3 novel research directions.\n2. PHASE 2: EXPERIMENTAL DESIGN - Detail the protocol and list required reagents.\n3. PHASE 3: GRANT PROPOSAL - Create an NIH-style proposal with a Predicted Impact Score (0-100).
-`;
+  let fullPrompt = `${systemInstruction}\n\nResearch Challenge: ${prompt}\n\nProvide your response in three sections:\n\n1. PHASE 1: HYPOTHESES - Generate 3 novel research directions.\n2. PHASE 2: EXPERIMENTAL DESIGN - Detail the protocol and list required reagents.\n3. PHASE 3: GRANT PROPOSAL - Create an NIH-style proposal with a Predicted Impact Score (0-100).\n`;
+
+  // Add context if provided for refinement
+  if (context) {
+    fullPrompt += `\n\nPrevious Output:\n${context}\n\nPlease refine or modify the above content based on the new instructions.`;
+  }
 
   // Prepare the content for the model
   const contents = [{

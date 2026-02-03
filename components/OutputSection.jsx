@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { generatePDF } from '../app/lib/export';
 
-export default function OutputSection({ title, content, isLoading }) {
+export default function OutputSection({ title, content, isLoading, isPhase2 = false, isPhase3 = false }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -15,20 +16,53 @@ export default function OutputSection({ title, content, isLoading }) {
     }
   };
 
+  const handleExport = async () => {
+    if (content && content !== 'Section pending...' && content !== 'Submit a research prompt to generate content') {
+      try {
+        await generatePDF({
+          hypotheses: title.includes('Hypotheses') ? content : '',
+          experimentalDesign: title.includes('Experimental Design') ? content : '',
+          grantProposal: title.includes('Grant Proposal') ? content : ''
+        }, `Synth Bio Architect - ${title}`);
+      } catch (error) {
+        console.error('Export error:', error);
+        alert('Failed to export document: ' + error.message);
+      }
+    }
+  };
+
   const isContentValid = content && content !== 'Section pending...' && content !== 'Submit a research prompt to generate content';
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-400">{title}</h2>
-        {!isLoading && isContentValid && (
-          <button
-            onClick={handleCopy}
-            className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isPhase2 && isContentValid && (
+            <button
+              onClick={handleExport}
+              className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+            >
+              Export PDF
+            </button>
+          )}
+          {isPhase3 && isContentValid && (
+            <button
+              onClick={handleExport}
+              className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+            >
+              Export PDF
+            </button>
+          )}
+          {!isLoading && isContentValid && (
+            <button
+              onClick={handleCopy}
+              className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          )}
+        </div>
       </div>
       <div className="prose prose-invert max-w-none">
         {isLoading ? (
