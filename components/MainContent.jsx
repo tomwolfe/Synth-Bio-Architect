@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import OutputSection from './OutputSection';
+import SecurityBadge from './SecurityBadge';
 import { parseResponseIntoSections } from '../app/lib/parser';
 import { generateResearchStream } from '../app/lib/gemini';
 
@@ -63,7 +64,7 @@ export default function MainContent({ apiKey }) {
       for await (const chunk of result) {
         // Access text via the candidates array
         const chunkText = chunk.candidates[0].content.parts[0].text || '';
-        
+
         if (chunkText.trim()) {
           fullText += chunkText;
           // Parse the current text into sections and update the UI in real-time
@@ -74,7 +75,7 @@ export default function MainContent({ apiKey }) {
     } catch (err) {
       console.error("Error calling Gemini API:", err);
       const errorMessage = err.message || String(err);
-      
+
       if (errorMessage.includes("403")) {
         setError('Quota Exceeded: Your API key has reached its limit or doesn\'t have permission for this model.');
       } else if (errorMessage.includes("401") || errorMessage.includes("400")) {
@@ -96,8 +97,13 @@ export default function MainContent({ apiKey }) {
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold">Synth Bio Architect</h1>
-          <p className="text-gray-400 mt-2">Generate hypotheses, design experiments, and draft proposals with AI assistance</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold">Synth Bio Architect</h1>
+              <p className="text-gray-400 mt-2">Generate hypotheses, design experiments, and draft proposals with AI assistance</p>
+            </div>
+            <SecurityBadge />
+          </div>
         </header>
 
         {/* Error message display */}
@@ -140,7 +146,7 @@ export default function MainContent({ apiKey }) {
             >
               {isLoading ? 'Generating Response...' : 'Generate Research Plan'}
             </button>
-            
+
             {isGenerating && (
               <span className="text-blue-400 animate-pulse flex items-center">
                 <span className="mr-2 h-2 w-2 bg-blue-400 rounded-full"></span>

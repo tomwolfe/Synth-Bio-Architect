@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { downloadGenBank, downloadSBOL } from '../lib/exporter';
 
 export default function OutputSection({ title, content, isLoading }) {
   const [copied, setCopied] = useState(false);
@@ -15,6 +16,22 @@ export default function OutputSection({ title, content, isLoading }) {
     }
   };
 
+  const handleExportGenBank = () => {
+    if (content) {
+      // Generate a filename based on the title
+      const fileName = title.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/gi, '');
+      downloadGenBank(content, fileName);
+    }
+  };
+
+  const handleExportSBOL = () => {
+    if (content) {
+      // Generate a filename based on the title
+      const fileName = title.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/gi, '');
+      downloadSBOL(content, fileName);
+    }
+  };
+
   const isContentValid = content && content !== 'Section pending...' && content !== 'Submit a research prompt to generate content';
 
   return (
@@ -22,12 +39,33 @@ export default function OutputSection({ title, content, isLoading }) {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-400">{title}</h2>
         {!isLoading && isContentValid && (
-          <button
-            onClick={handleCopy}
-            className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
+          <div className="flex gap-2">
+            {/* Show export buttons only for Experimental Design section */}
+            {title.includes('Experimental Design') && (
+              <>
+                <button
+                  onClick={handleExportGenBank}
+                  className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 text-white rounded transition-colors"
+                  title="Export as GenBank format"
+                >
+                  Export .gb
+                </button>
+                <button
+                  onClick={handleExportSBOL}
+                  className="px-3 py-1 text-xs bg-purple-700 hover:bg-purple-600 text-white rounded transition-colors"
+                  title="Export as SBOL format"
+                >
+                  Export .xml
+                </button>
+              </>
+            )}
+            <button
+              onClick={handleCopy}
+              className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
         )}
       </div>
       <div className="prose prose-invert max-w-none">
@@ -38,7 +76,7 @@ export default function OutputSection({ title, content, isLoading }) {
             <div className="h-4 bg-gray-700 rounded w-5/6"></div>
           </div>
         ) : content ? (
-          <ReactMarkdown 
+          <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
               h1: ({node, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
