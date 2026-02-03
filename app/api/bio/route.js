@@ -1,4 +1,4 @@
-import { runBioTask } from '../../../lib/sandbox';
+import { runBioTask } from '../../lib/sandbox';
 
 export async function POST(request) {
   try {

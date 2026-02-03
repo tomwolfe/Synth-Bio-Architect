@@ -1,4 +1,4 @@
-import { verifyPMIDs } from '../../../lib/ncbi_verifier';
+import { verifyPMIDs } from '../../lib/ncbi_verifier';
 
 export async function POST(request) {
   try {
