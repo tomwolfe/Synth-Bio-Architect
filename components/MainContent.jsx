@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import OutputSection from './OutputSection';
+import CalculationHub from './CalculationHub';
 import { parseResponseIntoSections } from '../app/lib/parser';
 import { generateResearchStream } from '../app/lib/gemini';
 
@@ -149,6 +150,10 @@ export default function MainContent({ apiKey }) {
             )}
           </div>
         </form>
+
+        <div className="mt-10">
+          <CalculationHub />
+        </div>
 
         <div className="mt-10 space-y-10">
           <OutputSection

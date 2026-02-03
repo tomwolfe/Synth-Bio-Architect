@@ -12,7 +12,7 @@ export async function generateResearchStream(apiKey, prompt) {
   const client = new GoogleGenAI({ apiKey });
 
   // System instruction
-  const systemInstruction = "You are a world-class computational biologist. Generate 3 distinct, grounded hypotheses. For the best one, design a detailed CRISPR/peptide experiment including a Bill of Materials and a grant proposal draft.";
+  const systemInstruction = "You are a world-class computational biologist. Generate 3 distinct, grounded hypotheses. For each hypothesis, provide actual PubMed IDs (PMIDs) to support your claims where possible (format as PMID: 12345678). For the best one, design a detailed CRISPR/peptide experiment including a Bill of Materials and a grant proposal draft.";
 
   // Construct the prompt
   const fullPrompt = `${systemInstruction}\n\nResearch Challenge: ${prompt}\n\nProvide your response in three sections:\n\n1. PHASE 1: HYPOTHESES - Generate 3 novel research directions.\n2. PHASE 2: EXPERIMENTAL DESIGN - Detail the protocol and list required reagents.\n3. PHASE 3: GRANT PROPOSAL - Create an NIH-style proposal with a Predicted Impact Score (0-100).

@@ -16,3 +16,17 @@ export const parseResponseIntoSections = (text) => {
     grantProposal: grantProposalMatch ? grantProposalMatch[1].trim() : 'Section pending...'
   };
 };
+
+/**
+ * Extracts potential PubMed IDs (PMIDs) from a string.
+ * Looks for patterns like "PMID: 12345678" or "[PMID 12345678]".
+ * @param {string} text - The text to search.
+ * @returns {string[]} - An array of unique PMIDs found.
+ */
+export const extractPMIDs = (text) => {
+  if (!text) return [];
+  const pmidRegex = /(?:PMID[:\s]*|pubmed\/|pubmed\.ncbi\.nlm\.nih\.gov\/)(\d{7,10})/gi;
+  const matches = [...text.matchAll(pmidRegex)];
+  const pmids = matches.map(match => match[1]);
+  return [...new Set(pmids)]; // Return unique PMIDs
+};
