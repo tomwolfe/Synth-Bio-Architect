@@ -87,6 +87,8 @@ export default function MainContent({ apiKey }) {
         setError('Safety Filter: The model refused to generate a response due to safety concerns.');
       } else if (errorMessage.includes("An API Key must be set")) {
         setError('Error: An API Key must be set when running in a browser. Please make sure your API key is valid and saved.');
+      } else if (errorMessage.includes("503") || errorMessage.includes("overloaded") || errorMessage.includes("UNAVAILABLE")) {
+        setError('Service Temporarily Unavailable: The AI model is currently overloaded. Please try again in a moment.');
       } else {
         setError(`Error: ${errorMessage}`);
       }
@@ -131,6 +133,8 @@ export default function MainContent({ apiKey }) {
         setError('Invalid API Key during refinement.');
       } else if (errorMessage.includes("safety")) {
         setError('Safety Filter during refinement.');
+      } else if (errorMessage.includes("503") || errorMessage.includes("overloaded") || errorMessage.includes("UNAVAILABLE")) {
+        setError('Service Temporarily Unavailable: The AI model is currently overloaded. Please try again in a moment.');
       } else {
         setError(`Refinement error: ${errorMessage}`);
       }
