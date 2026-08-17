@@ -1,25 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
+@theme {
+  --color-foreground: rgb(0, 0, 0);
+  --color-background-start: rgb(255, 255, 255);
+  --color-background-end: rgb(255, 255, 255);
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      transparent
-    )
-    rgb(var(--background-rgb));
+  color: var(--color-foreground);
+  background: linear-gradient(to bottom, transparent, transparent)
+    var(--color-background-end);
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+@utility text-balance {
+  text-wrap: balance;
 }
